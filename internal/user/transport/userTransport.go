@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	mymux "github.com/gorilla/mux"
 	"net/http"
 	"strconv"
 	ue "sxk.go-kit/internal/user/endpoint"
@@ -21,13 +22,12 @@ import (
 
 // 请求处理
 func EncodeUserRequest(ctx context.Context, r *http.Request) (interface{}, error) {
-	// 获取参数，暂时定义的路由参数
-	id, err := strconv.Atoi(r.URL.Query().Get("id"))
-	if err != nil {
-		return nil, errors.New("query params error")
-	}
-	return ue.UserRequest{ID: id}, nil
 
+	if data, ok := mymux.Vars(r)["id"]; ok {
+		d, _ := strconv.Atoi(data)
+		return ue.UserRequest{ID: d}, nil
+	}
+	return nil, errors.New("NotFound")
 }
 
 // 响应处理
