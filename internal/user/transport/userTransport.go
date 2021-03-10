@@ -36,3 +36,22 @@ func EncodeUserResponse(ctx context.Context, w http.ResponseWriter, response int
 	w.Header().Set("Content-type", "application/json")
 	return json.NewEncoder(w).Encode(response)
 }
+
+// 增加用户时请求的处理，Post请求，从form表单中获取数据，并转化为endpoint需要的请求格式
+func EncodeAddUserRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	id := r.PostFormValue("id")
+	name := r.PostFormValue("name")
+	if id == "" && name == "" {
+		return nil, errors.New("AddUserParamsError")
+	}
+	IntId, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, errors.New("ParamsTypeError")
+	}
+	return ue.AddUserRequest{ID: IntId, Name: name}, nil
+}
+
+func EncodeAddUserResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+	w.Header().Set("Content-type", "application/json")
+	return json.NewEncoder(w).Encode(response)
+}

@@ -22,14 +22,20 @@ func main() {
 	user := us.NewUserImpl()
 
 	// 2. 生成端点
-	endpoint := ue.GenUserEndpoint(user)
+	endpoint1 := ue.GenUserEndpoint(user)
+	endpoint2 := ue.GenAddUserEndpoint(user)
 
 	// 3. 使用kit内置的http定义服务
-	server := http.NewServer(endpoint, ut.EncodeUserRequest, ut.EncodeUserResponse)
+	server1 := http.NewServer(endpoint1, ut.EncodeUserRequest, ut.EncodeUserResponse)
+	server2 := http.NewServer(endpoint2, ut.EncodeAddUserRequest, ut.EncodeAddUserResponse)
 
 	// 4. 使用第三方工具包装路由
 	router := mymux.NewRouter()
-	router.Methods("Get").Path("/user/{id:\\d+}").Handler(server)
+	router.Methods("Get").Path("/user/{id:\\d+}").Handler(server1)
+
+	// 5. add user methods
+	router.Methods("Post").Path("/user/add").Handler(server2)
+
 	log.Println("user go-kit server is running at 127.0.0.1:9999")
 
 	err := rowHttp.ListenAndServe(":9999", router)

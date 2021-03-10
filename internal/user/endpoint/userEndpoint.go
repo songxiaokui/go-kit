@@ -35,3 +35,21 @@ func GenUserEndpoint(u us.UserServer) endpoint.Endpoint {
 
 	}
 }
+
+// 定义新增用户接口，使用进程内部缓存技术
+type AddUserRequest struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+type AddUserResponse struct {
+	Status bool `json:"status"`
+}
+
+func GenAddUserEndpoint(u us.UserServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		r := request.(AddUserRequest)
+		result := u.AddUser(r.Name, r.ID)
+		return AddUserResponse{Status: result}, nil
+	}
+}
