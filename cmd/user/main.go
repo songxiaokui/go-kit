@@ -36,6 +36,12 @@ func main() {
 	// 5. add user methods
 	router.Methods("Post").Path("/user/add").Handler(server2)
 
+	// 6. add a health check
+	router.Methods("Get").Path("/health").HandlerFunc(func(writer rowHttp.ResponseWriter, request *rowHttp.Request) {
+		writer.Header().Set("Content-type", "application/json")
+		writer.Write([]byte(`{"status": "ok"}`))
+	})
+
 	log.Println("user go-kit server is running at 127.0.0.1:9999")
 
 	err := rowHttp.ListenAndServe(":9999", router)
