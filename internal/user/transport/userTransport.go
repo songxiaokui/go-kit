@@ -1,10 +1,13 @@
 package transport
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	mymux "github.com/gorilla/mux"
+	"io"
 	"net/http"
 	"strconv"
 	ue "sxk.go-kit/internal/user/endpoint"
@@ -39,10 +42,18 @@ func EncodeUserResponse(ctx context.Context, w http.ResponseWriter, response int
 
 // 增加用户时请求的处理，Post请求，从form表单中获取数据，并转化为endpoint需要的请求格式
 func EncodeAddUserRequest(ctx context.Context, r *http.Request) (interface{}, error) {
-	buf := make([]byte, 1024)
-	n, _ := r.Body.Read(buf)
-	bodyString := string(buf[0:n])
+
+	bodyString := ReadBodyInfoByBuffer(r.Body)
+	if bodyString == "" {
+		return nil, errors.New("NoData")
+	}
+	fmt.Println("body:", bodyString)
 	defer r.Body.Close()
+
+	//buf := make([]byte, 1024)
+	//n, _ := r.Body.Read(buf)
+	//bodyString := string(buf[0:n])
+	//defer r.Body.Close()
 
 	var au ue.AddUserRequest
 	err := json.Unmarshal([]byte(bodyString), &au)
@@ -59,4 +70,28 @@ func EncodeAddUserRequest(ctx context.Context, r *http.Request) (interface{}, er
 func EncodeAddUserResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Content-type", "application/json")
 	return json.NewEncoder(w).Encode(response)
+}
+
+// use buffer to parse body
+func ReadBodyInfoByBuffer(body io.Reader) string {
+	// 使用缓冲
+	var buffer bytes.Buffer
+	for {
+		template := make([]byte, 1024)
+		n, err := body.Read(template)
+		if err != nil {
+			if err == io.EOF {
+				if n > 0 {
+					buffer.Write(template[:n])
+				}
+				break
+			} else {
+				return ""
+			}
+		}
+		if n > 0 {
+			buffer.Write(template[:n])
+		}
+	}
+	return buffer.String()
 }

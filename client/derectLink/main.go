@@ -32,7 +32,7 @@ func main() {
 	// get user info
 	client := http.NewClient("GET", t, EncodeUserRequest, DecodeUserResponse)
 	endPoint := client.Endpoint()
-	response, err := endPoint(context.Background(), UserRequest{ID: 1})
+	response, err := endPoint(context.Background(), UserRequest{ID: 2})
 	if err != nil {
 		fmt.Println(err)
 		return
