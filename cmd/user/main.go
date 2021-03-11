@@ -8,14 +8,18 @@ package main
 @Software: GoLand
 */
 import (
+	"fmt"
 	"github.com/go-kit/kit/transport/http"
 	mymux "github.com/gorilla/mux"
 	"log"
 	rowHttp "net/http"
+	"os"
+	"os/signal"
 	discovery "sxk.go-kit/api/discovery/user"
 	ue "sxk.go-kit/internal/user/endpoint"
 	us "sxk.go-kit/internal/user/service"
 	ut "sxk.go-kit/internal/user/transport"
+	"syscall"
 )
 
 func main() {
@@ -46,10 +50,22 @@ func main() {
 	log.Println("user go-kit server is running at 127.0.0.1:9999")
 
 	// register user server to consul
-	discovery.DiscoveryServer()
-	err := rowHttp.ListenAndServe(":9999", router)
-	if err != nil {
-		log.Fatal("servers error:", err)
-	}
+	errChannel := make(chan error)
+	go func() {
+		discovery.DiscoveryServer()
+		err := rowHttp.ListenAndServe(":9999", router)
+		log.Printf("http server is error: %s", err)
+		errChannel <- err
+	}()
 
+	// signal to kill process
+	go func() {
+		sigChannel := make(chan os.Signal)
+		signal.Notify(sigChannel, syscall.SIGINT, syscall.SIGTERM)
+		errChannel <- fmt.Errorf("syscall :%s", <-sigChannel)
+	}()
+
+	<-errChannel
+	// deregister
+	discovery.DeregisterDiscovery()
 }
