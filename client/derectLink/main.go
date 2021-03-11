@@ -18,16 +18,16 @@ import (
 
 func main() {
 	// parse url
-	t, _ := url.Parse("http://192.168.31.102:9999")
+	t, _ := url.Parse("http://127.0.0.1:9999")
 
 	// add user info
-	// TODO this is need fix post form parse
+
 	clientPost := http.NewClient("POST", t, EncodeAddUserRequest, DecodeAddUserResponse)
 	addPoint := clientPost.Endpoint()
-	_, err := addPoint(context.Background(), AddUserRequest{ID: 2, Name: "austsxk"})
+	rsp, err := addPoint(context.Background(), AddUserRequest{ID: 2, Name: "austsxk"})
 
-	//d := rsp.(AddUserResponse)
-	//fmt.Printf("add status : %#v\n", d.Status)
+	d := rsp.(AddUserResponse)
+	fmt.Printf("add status : %#v\n", d.Status)
 
 	// get user info
 	client := http.NewClient("GET", t, EncodeUserRequest, DecodeUserResponse)

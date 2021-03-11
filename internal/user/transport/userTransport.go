@@ -39,16 +39,21 @@ func EncodeUserResponse(ctx context.Context, w http.ResponseWriter, response int
 
 // 增加用户时请求的处理，Post请求，从form表单中获取数据，并转化为endpoint需要的请求格式
 func EncodeAddUserRequest(ctx context.Context, r *http.Request) (interface{}, error) {
-	id := r.PostFormValue("id")
-	name := r.PostFormValue("name")
-	if id == "" && name == "" {
+	buf := make([]byte, 1024)
+	n, _ := r.Body.Read(buf)
+	bodyString := string(buf[0:n])
+	defer r.Body.Close()
+
+	var au ue.AddUserRequest
+	err := json.Unmarshal([]byte(bodyString), &au)
+	if err != nil {
+		return nil, err
+	}
+
+	if au.ID == 0 && au.Name == "" {
 		return nil, errors.New("AddUserParamsError")
 	}
-	IntId, err := strconv.Atoi(id)
-	if err != nil {
-		return nil, errors.New("ParamsTypeError")
-	}
-	return ue.AddUserRequest{ID: IntId, Name: name}, nil
+	return au, nil
 }
 
 func EncodeAddUserResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {

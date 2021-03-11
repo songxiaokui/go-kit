@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strconv"
+	"strings"
 )
 
 /*
@@ -43,17 +43,19 @@ func DecodeUserResponse(ctx context.Context, res *http.Response) (response inter
 // add user encode
 func EncodeAddUserRequest(ctx context.Context, request *http.Request, data interface{}) error {
 	d := data.(AddUserRequest)
+	byteDate, err := json.Marshal(d)
+	if err != nil {
+		return err
+	}
 	request.URL.Path += "/user/add"
-	request.PostForm = url.Values{"id": []string{strconv.Itoa(d.ID)}, "name": []string{d.Name}}
-	// get form data
-	fmt.Println(request.PostFormValue("id"))
-	fmt.Println(request.PostFormValue("name"))
+	// data set in body
+	request.Header.Set("Content-Type", "application/json;charset=UTF-8")
+	request.Body = ioutil.NopCloser(strings.NewReader(string(byteDate[:])))
 	return nil
 }
 
 func DecodeAddUserResponse(ctx context.Context, res *http.Response) (response interface{}, err error) {
 	// 将响应断言为定义的响应
-	fmt.Println(res.Body, res.StatusCode)
 	if res.StatusCode >= 400 {
 		return nil, errors.New("data not found")
 	}
