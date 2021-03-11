@@ -17,3 +17,13 @@ type UserRequest struct {
 type UserResponse struct {
 	Data string `json:"data"`
 }
+
+// 定义新增用户接口，使用进程内部缓存技术
+type AddUserRequest struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+type AddUserResponse struct {
+	Status bool `json:"status"`
+}

@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 )
 
@@ -36,4 +38,30 @@ func DecodeUserResponse(ctx context.Context, res *http.Response) (response inter
 		return nil, err
 	}
 	return userResponse, err
+}
+
+// add user encode
+func EncodeAddUserRequest(ctx context.Context, request *http.Request, data interface{}) error {
+	d := data.(AddUserRequest)
+	request.URL.Path += "/user/add"
+	request.PostForm = url.Values{"id": []string{strconv.Itoa(d.ID)}, "name": []string{d.Name}}
+	// get form data
+	fmt.Println(request.PostFormValue("id"))
+	fmt.Println(request.PostFormValue("name"))
+	return nil
+}
+
+func DecodeAddUserResponse(ctx context.Context, res *http.Response) (response interface{}, err error) {
+	// 将响应断言为定义的响应
+	fmt.Println(res.Body, res.StatusCode)
+	if res.StatusCode >= 400 {
+		return nil, errors.New("data not found")
+	}
+	// 定义一个响应对象，进行存储解析的响应
+	var r AddUserResponse
+	err = json.NewDecoder(res.Body).Decode(&r)
+	if err != nil {
+		return nil, err
+	}
+	return r, err
 }
