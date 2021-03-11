@@ -12,6 +12,7 @@ import (
 	mymux "github.com/gorilla/mux"
 	"log"
 	rowHttp "net/http"
+	discovery "sxk.go-kit/api/discovery/user"
 	ue "sxk.go-kit/internal/user/endpoint"
 	us "sxk.go-kit/internal/user/service"
 	ut "sxk.go-kit/internal/user/transport"
@@ -44,6 +45,8 @@ func main() {
 
 	log.Println("user go-kit server is running at 127.0.0.1:9999")
 
+	// register user server to consul
+	discovery.DiscoveryServer()
 	err := rowHttp.ListenAndServe(":9999", router)
 	if err != nil {
 		log.Fatal("servers error:", err)
