@@ -52,7 +52,7 @@ func main() {
 	// register user server to consul
 	errChannel := make(chan error)
 	go func() {
-		// discovery.DiscoveryServer()
+		discovery.DiscoveryServer()
 		err := rowHttp.ListenAndServe(":9999", router)
 		log.Printf("http server is error: %s", err)
 		errChannel <- err
