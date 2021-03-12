@@ -11,14 +11,21 @@ package user
 // automatic discovery user server
 
 import (
+	"fmt"
+	"github.com/google/uuid"
 	mapi "github.com/hashicorp/consul/api"
 	"log"
+	"strconv"
 	"sync"
 )
 
 var (
-	UClient *mapi.Client
-	once    sync.Once
+	UClient        *mapi.Client
+	once           sync.Once
+	serviceID      string
+	serviceName    string
+	serviceAddress string
+	servicePort    int
 )
 
 func init() {
@@ -34,19 +41,26 @@ func init() {
 	})
 }
 
+func SetServerConfig(id, name, address string, port int) {
+	serviceID = id + uuid.New().String()
+	serviceName = name
+	serviceAddress = address
+	servicePort = port
+}
+
 func DiscoveryServer() {
 	// server struct
 	register := mapi.AgentServiceRegistration{}
-	register.ID = "austsxk.user.v1"
-	register.Name = "user_server"
-	register.Address = "192.168.31.102"
-	register.Port = 9999
+	register.ID = serviceID
+	register.Name = serviceName
+	register.Address = serviceAddress
+	register.Port = servicePort
 	register.Tags = []string{"userModel"}
 
 	// server check struct
 	check := mapi.AgentServiceCheck{}
 	check.Interval = "5s"
-	check.HTTP = "http://192.168.31.102:9999/health"
+	check.HTTP = fmt.Sprintf("http://%s:%s/health", serviceAddress, strconv.Itoa(servicePort))
 
 	register.Check = &check
 
@@ -59,7 +73,7 @@ func DiscoveryServer() {
 
 // Deregister
 func DeregisterDiscovery() {
-	err := UClient.Agent().ServiceDeregister("austsxk.user.v1")
+	err := UClient.Agent().ServiceDeregister(serviceID)
 	if err != nil {
 		log.Fatal(err)
 	}

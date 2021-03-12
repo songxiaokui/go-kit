@@ -8,6 +8,7 @@ package main
 @Software: GoLand
 */
 import (
+	"flag"
 	"fmt"
 	"github.com/go-kit/kit/transport/http"
 	mymux "github.com/gorilla/mux"
@@ -15,6 +16,7 @@ import (
 	rowHttp "net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	discovery "sxk.go-kit/api/discovery/user"
 	ue "sxk.go-kit/internal/user/endpoint"
 	us "sxk.go-kit/internal/user/service"
@@ -23,6 +25,16 @@ import (
 )
 
 func main() {
+	// use flag receive params
+	var id, name, address string
+	var port int
+	flag.StringVar(&id, "id", "austsxk", "服务唯一ID，如果相同则自动添加唯一区别信息")
+	flag.StringVar(&name, "name", "user_serve", "服务名称")
+	flag.StringVar(&address, "d", "192.168.31.102", "服务唯一ID，如果相同则自动添加唯一区别信息")
+	flag.IntVar(&port, "p", 9999, "服务运行的端口")
+	flag.Parse()
+
+	discovery.SetServerConfig(id, name, address, port)
 	// 1. 初始化实体
 	user := us.NewUserImpl()
 
@@ -47,13 +59,13 @@ func main() {
 		writer.Write([]byte(`{"status": "ok"}`))
 	})
 
-	log.Println("user go-kit server is running at 127.0.0.1:9999")
+	log.Printf("user go-kit server is running at %s:%d", address, port)
 
 	// register user server to consul
 	errChannel := make(chan error)
 	go func() {
 		discovery.DiscoveryServer()
-		err := rowHttp.ListenAndServe(":9999", router)
+		err := rowHttp.ListenAndServe(address+":"+strconv.Itoa(port), router)
 		log.Printf("http server is error: %s", err)
 		errChannel <- err
 	}()
