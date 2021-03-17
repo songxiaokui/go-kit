@@ -29,7 +29,7 @@ func main() {
 	var id, name, address string
 	var port int
 	flag.StringVar(&id, "id", "austsxk", "服务唯一ID，如果相同则自动添加唯一区别信息")
-	flag.StringVar(&name, "name", "user_serve", "服务名称")
+	flag.StringVar(&name, "name", "user_server", "服务名称")
 	flag.StringVar(&address, "d", "192.168.31.102", "服务唯一ID，如果相同则自动添加唯一区别信息")
 	flag.IntVar(&port, "p", 9999, "服务运行的端口")
 	flag.Parse()
