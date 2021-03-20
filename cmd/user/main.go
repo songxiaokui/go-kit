@@ -12,12 +12,14 @@ import (
 	"fmt"
 	"github.com/go-kit/kit/transport/http"
 	mymux "github.com/gorilla/mux"
+	"golang.org/x/time/rate"
 	"log"
 	rowHttp "net/http"
 	"os"
 	"os/signal"
 	"strconv"
 	discovery "sxk.go-kit/api/discovery/user"
+	utilty "sxk.go-kit/internal/user"
 	ue "sxk.go-kit/internal/user/endpoint"
 	us "sxk.go-kit/internal/user/service"
 	ut "sxk.go-kit/internal/user/transport"
@@ -39,7 +41,9 @@ func main() {
 	user := us.NewUserImpl()
 
 	// 2. 生成端点
-	endpoint1 := ue.GenUserEndpoint(user)
+	rateLimit := rate.NewLimiter(1, 3)
+	// 使用中间键，添加限流操作
+	endpoint1 := utilty.RateLimiterEndpoint(rateLimit)(ue.GenUserEndpoint(user))
 	endpoint2 := ue.GenAddUserEndpoint(user)
 
 	// 3. 使用kit内置的http定义服务
