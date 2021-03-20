@@ -19,20 +19,24 @@ import (
 	"sync"
 )
 
+const (
+	DefaultAddress = "192.168.31.57"
+)
+
 var (
 	UClient        *mapi.Client
 	once           sync.Once
 	serviceID      string
 	serviceName    string
 	serviceAddress string
-	servicePort    int
+	ServicePort    int
 )
 
 func init() {
 	once.Do(func() {
 		// consul address
 		config := mapi.DefaultConfig()
-		config.Address = "192.168.30.61:8500"
+		config.Address = DefaultAddress + ":8500"
 		client, err := mapi.NewClient(config)
 		if err != nil {
 			log.Fatal(err)
@@ -45,7 +49,7 @@ func SetServerConfig(id, name, address string, port int) {
 	serviceID = id + uuid.New().String()
 	serviceName = name
 	serviceAddress = address
-	servicePort = port
+	ServicePort = port
 }
 
 func DiscoveryServer() {
@@ -54,13 +58,13 @@ func DiscoveryServer() {
 	register.ID = serviceID
 	register.Name = serviceName
 	register.Address = serviceAddress
-	register.Port = servicePort
+	register.Port = ServicePort
 	register.Tags = []string{"userModel"}
 
 	// server check struct
 	check := mapi.AgentServiceCheck{}
 	check.Interval = "5s"
-	check.HTTP = fmt.Sprintf("http://%s:%s/health", serviceAddress, strconv.Itoa(servicePort))
+	check.HTTP = fmt.Sprintf("http://%s:%s/health", serviceAddress, strconv.Itoa(ServicePort))
 
 	register.Check = &check
 

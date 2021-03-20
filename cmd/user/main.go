@@ -30,7 +30,7 @@ func main() {
 	var port int
 	flag.StringVar(&id, "id", "austsxk", "服务唯一ID，如果相同则自动添加唯一区别信息")
 	flag.StringVar(&name, "name", "user_server", "服务名称")
-	flag.StringVar(&address, "d", "192.168.31.102", "服务唯一ID，如果相同则自动添加唯一区别信息")
+	flag.StringVar(&address, "d", "192.168.31.57", "服务唯一ID，如果相同则自动添加唯一区别信息")
 	flag.IntVar(&port, "p", 9999, "服务运行的端口")
 	flag.Parse()
 
@@ -73,11 +73,14 @@ func main() {
 	// signal to kill process
 	go func() {
 		sigChannel := make(chan os.Signal)
-		signal.Notify(sigChannel, syscall.SIGINT, syscall.SIGTERM)
+		signal.Notify(sigChannel, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 		errChannel <- fmt.Errorf("syscall :%s", <-sigChannel)
 	}()
 
-	<-errChannel
-	// deregister
-	discovery.DeregisterDiscovery()
+	select {
+	case <-errChannel:
+		// deregister
+		discovery.DeregisterDiscovery()
+	}
+	fmt.Println("shutdown...")
 }

@@ -3,6 +3,8 @@ package endpoint
 import (
 	"context"
 	"github.com/go-kit/kit/endpoint"
+	"strconv"
+	div "sxk.go-kit/api/discovery/user"
 	us "sxk.go-kit/internal/user/service"
 )
 
@@ -29,8 +31,8 @@ func GenUserEndpoint(u us.UserServer) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		// 断言请求为UserRequest
 		r := request.(UserRequest)
-		// 调用接口获取响应
-		data := u.SearchUser(r.ID)
+		// 调用接口获取响应, 为了区别不同的服务端口，加上服务端口标示
+		data := u.SearchUser(r.ID) + " - " + strconv.Itoa(div.ServicePort)
 		return UserResponse{Data: data}, nil
 
 	}

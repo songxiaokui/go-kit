@@ -15,18 +15,21 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/sd"
 	"github.com/go-kit/kit/sd/consul"
+	"github.com/go-kit/kit/sd/lb"
 	transportHttp "github.com/go-kit/kit/transport/http"
 	consulapi "github.com/hashicorp/consul/api"
 	"io"
 	"net/url"
 	"os"
+	discovery "sxk.go-kit/api/discovery/user"
 	derectTranspot "sxk.go-kit/client/derectLink/service"
+	"time"
 )
 
 func main() {
 	// 1. 创建consul客户端
 	config := consulapi.DefaultConfig()
-	config.Address = "192.168.30.61:8500"
+	config.Address = discovery.DefaultAddress + ":8500"
 	// 创建consul client
 	apiClient, _ := consulapi.NewClient(config)
 	// 使用kit库下的consul创建客户端
@@ -53,26 +56,33 @@ func main() {
 	}
 	endpointer := sd.NewEndpointer(consulInstancer, factory, logger)
 
-	// 4. 获取全部的endpoints
-	endpoints, _ := endpointer.Endpoints()
+	// 在客服端实现负载均衡，轮询算法
+	// mlib := lb.NewRoundRobin(endpointer)
+	// 在客户端使用随机选则一个服务端
+	mlib := lb.NewRandom(endpointer, time.Now().UnixNano())
 
-	fmt.Println("endpoint 长度:", len(endpoints))
+	//// 4. 获取全部的endpoints
+	//endpoints, _ := endpointer.Endpoints()
+	//endP := endpoints[0]
+	//fmt.Println("endpoint 长度:", len(endpoints))
+	//// 5. 按负载均衡获取其中的一个
+	//if len(endpoints) < 0 {
+	//	  return
+	//}
 
-	// 5. 按负载均衡获取其中的一个
-	if len(endpoints) < 0 {
-		return
+	for {
+		time.Sleep(time.Second * 1)
+		endP, _ := mlib.Endpoint()
+
+		// 6.调用服务
+		response, err := endP(context.Background(), derectTranspot.UserRequest{ID: 2})
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		// 7.断言响应
+		rp := response.(derectTranspot.UserResponse)
+		fmt.Printf("recive response : %s\n", rp.Data)
 	}
-	endP := endpoints[0]
-
-	// 6.调用服务
-	response, err := endP(context.Background(), derectTranspot.UserRequest{ID: 2})
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	// 7.断言响应
-	rp := response.(derectTranspot.UserResponse)
-	fmt.Printf("recive response : %s", rp.Data)
-
 }

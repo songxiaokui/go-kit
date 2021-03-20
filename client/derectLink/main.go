@@ -13,12 +13,13 @@ import (
 	"fmt"
 	"github.com/go-kit/kit/transport/http"
 	"net/url"
+	discovery "sxk.go-kit/api/discovery/user"
 	. "sxk.go-kit/client/derectLink/service"
 )
 
 func main() {
 	// parse url
-	t, _ := url.Parse("http://127.0.0.1:9999")
+	t, _ := url.Parse(fmt.Sprintf("http://%s:9004", discovery.DefaultAddress))
 
 	// add user info
 
