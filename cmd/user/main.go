@@ -19,7 +19,7 @@ import (
 	"os/signal"
 	"strconv"
 	discovery "sxk.go-kit/api/discovery/user"
-	utilty "sxk.go-kit/internal/user"
+	utility "sxk.go-kit/internal/user"
 	ue "sxk.go-kit/internal/user/endpoint"
 	us "sxk.go-kit/internal/user/service"
 	ut "sxk.go-kit/internal/user/transport"
@@ -43,11 +43,15 @@ func main() {
 	// 2. 生成端点
 	rateLimit := rate.NewLimiter(1, 3)
 	// 使用中间键，添加限流操作
-	endpoint1 := utilty.RateLimiterEndpoint(rateLimit)(ue.GenUserEndpoint(user))
+	endpoint1 := utility.RateLimiterEndpoint(rateLimit)(ue.GenUserEndpoint(user))
 	endpoint2 := ue.GenAddUserEndpoint(user)
 
 	// 3. 使用kit内置的http定义服务
-	server1 := http.NewServer(endpoint1, ut.EncodeUserRequest, ut.EncodeUserResponse)
+	// 添加自定义的错误处理处理信息
+	options := []http.ServerOption{
+		http.ServerErrorEncoder(utility.MyErrorHandlerEncoder),
+	}
+	server1 := http.NewServer(endpoint1, ut.EncodeUserRequest, ut.EncodeUserResponse, options...)
 	server2 := http.NewServer(endpoint2, ut.EncodeAddUserRequest, ut.EncodeAddUserResponse)
 
 	// 4. 使用第三方工具包装路由
